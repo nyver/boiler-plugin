@@ -1,8 +1,8 @@
 <idea-plugin version="2">
-  <id>com.nyver.idea.plugin.boiler</id>
-  <name>Boiler plugin</name>
+  <id>com.yourcompany.unique.plugin.id</id>
+  <name>Plugin display name here</name>
   <version>1.0</version>
-  <vendor email="nyver@mail.ru" url="http://github.com/nyver">Yuri Novitsky</vendor>
+  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
 
   <description><![CDATA[
       Enter short description for your plugin here.<br>
@@ -33,12 +33,7 @@
   </project-components>
 
   <actions>
-      <group id="boilerplugin.group">
-          <separator/>
-          <action id="boilerplugin.uploadClass" class="com.nyver.idea.plugin.boiler.action.UploadClassAction"
-                  text="Upload Class to Boiler" icon="/icons/boiler.png"/>
-          <add-to-group group-id="MainToolBar" relative-to-action="Forward" anchor="after"/>
-      </group>
+    <!-- Add your actions here -->
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
