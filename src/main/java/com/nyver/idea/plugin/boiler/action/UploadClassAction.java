@@ -7,11 +7,19 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.ui.content.Content;
+import com.nyver.idea.plugin.boiler.Boiler;
+import com.nyver.idea.plugin.boiler.BoilerException;
 import com.nyver.idea.plugin.boiler.util.ActionUtil;
+import com.nyver.idea.plugin.boiler.view.BoilerToolWindowFactory;
+import org.jetbrains.annotations.Nullable;
+
+import javax.swing.*;
 
 /**
  * Upload to boiler action
@@ -23,6 +31,34 @@ public class UploadClassAction extends AnAction
     public static final String WINDOW_ID_BOILER = "Boiler";
 
     private Project project;
+
+    private BoilerToolWindowFactory toolWindowFactory;
+
+    public UploadClassAction(BoilerToolWindowFactory toolWindowFactory)
+    {
+        super(IconLoader.findIcon("/images/boiler.png"));
+        this.toolWindowFactory = toolWindowFactory;
+    }
+
+    public UploadClassAction()
+    {
+        super();
+    }
+
+    public UploadClassAction(Icon icon)
+    {
+        super(icon);
+    }
+
+    public UploadClassAction(@Nullable String text)
+    {
+        super(text);
+    }
+
+    public UploadClassAction(@Nullable String text, @Nullable String description, @Nullable Icon icon)
+    {
+        super(text, description, icon);
+    }
 
     /**
      * Get current java file
@@ -49,19 +85,16 @@ public class UploadClassAction extends AnAction
 
             if (classes.length >= 1) {
 
-                for(PsiClass cls: classes) {
-
-                    StringBuilder className = new StringBuilder();
-                    className.append(file.getPackageName());
-                    if (className.length() > 0) {
-                        className.append(".");
-                    }
-
-                    className.append(cls.getNameIdentifier().getText());
-
-                    UploadClassRunnable process = new UploadClassRunnable(className.toString(), file.getText());
-                    ProgressManager.getInstance().runProcess(process, process);
+                StringBuilder className = new StringBuilder();
+                className.append(file.getPackageName());
+                if (className.length() > 0) {
+                    className.append(".");
                 }
+
+                className.append(classes[0].getNameIdentifier().getText());
+
+                UploadClassRunnable process = new UploadClassRunnable(className.toString(), file.getText());
+                ProgressManager.getInstance().runProcess(process, process);
             } else {
                 notifyMessage("Java classes are not found", MessageType.ERROR);
             }
@@ -98,7 +131,33 @@ public class UploadClassAction extends AnAction
         @Override
         public void run()
         {
-            notifyMessage(String.format("Class \"%s\" has uploaded successfully", className), MessageType.INFO);
+            String url = toolWindowFactory.getBoilerUrl();
+
+            if (!url.isEmpty()) {
+                toolWindowFactory.getTextArea().append(String.format("Class \"%s\" is uploading to \"%s\"...\n", className, url));
+
+                Boiler boiler = new Boiler();
+
+                try {
+
+                    boiler.upload(url, className, text);
+
+                    String message = String.format("Class \"%s\" has been uploaded successfully\n", className);
+                    toolWindowFactory.getTextArea().append(message);
+                    notifyMessage(message, MessageType.INFO);
+                } catch (BoilerException e) {
+                    notifyMessage(e.getMessage(), MessageType.ERROR);
+                    toolWindowFactory.getTextArea().append(e.getMessage() + "\n");
+                    String response = boiler.getResponse();
+                    if (!response.isEmpty()) {
+                        toolWindowFactory.getTextArea().append(response);
+                    }
+                }
+
+            } else {
+                notifyMessage("Boiler url is empty", MessageType.ERROR);
+            }
         }
+
     }
 }

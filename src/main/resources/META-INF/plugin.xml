@@ -33,12 +33,12 @@
   </project-components>
 
   <actions>
-      <group id="boilerplugin.group">
+      <!--group id="boilerplugin.group">
           <separator/>
           <action id="boilerplugin.uploadClass" class="com.nyver.idea.plugin.boiler.action.UploadClassAction"
                   text="Upload Class to Boiler" icon="/images/boiler.png"/>
           <add-to-group group-id="MainToolBar" relative-to-action="Forward" anchor="after"/>
-      </group>
+      </group-->
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
