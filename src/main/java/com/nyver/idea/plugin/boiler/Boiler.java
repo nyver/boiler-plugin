@@ -79,7 +79,7 @@ public class Boiler
                     throw new BoilerException(type);
                 }
 
-                throw new BoilerException("Unknown error happened");
+                throw new BoilerException("Unknown error has happened");
             }
 
         } catch (IOException e) {

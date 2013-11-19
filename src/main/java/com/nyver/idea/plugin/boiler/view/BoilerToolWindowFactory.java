@@ -64,6 +64,6 @@ public class BoilerToolWindowFactory implements ToolWindowFactory
 
     public String getBoilerUrl()
     {
-        return urlComboBox.getSelectedItem().toString();
+        return (null != urlComboBox.getSelectedItem() ? urlComboBox.getSelectedItem().toString() : "");
     }
 }
