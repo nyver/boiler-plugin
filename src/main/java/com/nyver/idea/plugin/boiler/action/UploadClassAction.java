@@ -12,7 +12,6 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
-import com.intellij.ui.content.Content;
 import com.nyver.idea.plugin.boiler.Boiler;
 import com.nyver.idea.plugin.boiler.BoilerException;
 import com.nyver.idea.plugin.boiler.util.ActionUtil;
@@ -20,8 +19,6 @@ import com.nyver.idea.plugin.boiler.view.BoilerToolWindowFactory;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
 
 /**
  * Upload to boiler action
