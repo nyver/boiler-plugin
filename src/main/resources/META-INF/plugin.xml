@@ -42,6 +42,7 @@
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
+      <projectService serviceInterface="com.nyver.idea.plugin.boiler.BoilerPluginSettings" serviceImplementation="com.nyver.idea.plugin.boiler.BoilerPluginSettings"/>
       <toolWindow id="Boiler" icon="/images/boiler.png" anchor="bottom" factoryClass="com.nyver.idea.plugin.boiler.view.BoilerToolWindowFactory" />
 </extensions>
 </idea-plugin>

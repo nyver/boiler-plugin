@@ -20,6 +20,8 @@ import com.nyver.idea.plugin.boiler.view.BoilerToolWindowFactory;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * Upload to boiler action
@@ -134,6 +136,12 @@ public class UploadClassAction extends AnAction
             String url = toolWindowFactory.getBoilerUrl();
 
             if (!url.isEmpty()) {
+
+                toolWindowFactory.getTextArea().setText("");
+
+                toolWindowFactory.getSettings().saveUrl(url);
+                toolWindowFactory.setupSettings();
+
                 toolWindowFactory.getTextArea().append(String.format("Class \"%s\" is uploading to \"%s\"...\n", className, url));
 
                 Boiler boiler = new Boiler();

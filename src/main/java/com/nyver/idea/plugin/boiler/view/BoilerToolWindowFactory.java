@@ -1,6 +1,7 @@
 package com.nyver.idea.plugin.boiler.view;
 
 import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
@@ -14,12 +15,15 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.nyver.idea.plugin.boiler.BoilerPluginSettings;
 import com.nyver.idea.plugin.boiler.action.UploadClassAction;
 import com.nyver.idea.plugin.boiler.util.ActionUtil;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * BoilerToolWindowFactory
@@ -37,9 +41,14 @@ public class BoilerToolWindowFactory implements ToolWindowFactory
 
     private SimpleToolWindowPanel simpleToolWindowPanel;
 
+    private Project project;
+
+    private BoilerPluginSettings settings;
+
     @Override
     public void createToolWindowContent(Project project, ToolWindow toolWindow)
     {
+        this.project = project;
         boilerToolWindow = toolWindow;
 
         simpleToolWindowPanel = new SimpleToolWindowPanel(false);
@@ -55,6 +64,21 @@ public class BoilerToolWindowFactory implements ToolWindowFactory
         JComponent actionToolbar = ActionManager.getInstance().createActionToolbar(TOOLBAR_GROUP_BOILER, actionGroup, true).getComponent();
 
         simpleToolWindowPanel.setToolbar(actionToolbar);
+
+        setupSettings();
+    }
+
+    public void setupSettings()
+    {
+        settings = ServiceManager.getService(project, BoilerPluginSettings.class);
+        LinkedList<String> urls = settings.getUrls();
+
+        if (!urls.isEmpty()) {
+            urlComboBox.removeAllItems();
+            for(String url: urls) {
+                urlComboBox.addItem(url);
+            }
+        }
     }
 
     public JTextArea getTextArea()
@@ -65,5 +89,10 @@ public class BoilerToolWindowFactory implements ToolWindowFactory
     public String getBoilerUrl()
     {
         return (null != urlComboBox.getSelectedItem() ? urlComboBox.getSelectedItem().toString() : "");
+    }
+
+    public BoilerPluginSettings getSettings()
+    {
+        return settings;
     }
 }
