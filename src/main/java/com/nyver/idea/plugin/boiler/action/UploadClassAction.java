@@ -4,7 +4,9 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -20,6 +22,7 @@ import com.nyver.idea.plugin.boiler.Boiler;
 import com.nyver.idea.plugin.boiler.BoilerException;
 import com.nyver.idea.plugin.boiler.util.ActionUtil;
 import com.nyver.idea.plugin.boiler.view.BoilerToolWindowFactory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -99,17 +102,19 @@ public class UploadClassAction extends AnAction
 
                 final String className = builder.toString();
 
-                ApplicationManager.getApplication().runReadAction(
-                        new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                UploadClassRunnable process = new UploadClassRunnable(className.toString(), file.getText());
-                                ProgressManager.getInstance().runProcess(process, process);
-                            }
-                        }
-                );
+                Task.Backgroundable task = new Task.Backgroundable(null, "Uploading class to boiler", true)
+                {
+
+                    @Override
+                    public void run(@NotNull ProgressIndicator progressIndicator)
+                    {
+                        Runnable process = new UploadClassRunnable(className, file.getText());
+                        process.run();
+                    }
+                };
+
+                ProgressManager.getInstance().run(task);
+
             } else {
                 notifyMessage("Java classes are not found", MessageType.ERROR);
             }
@@ -123,16 +128,20 @@ public class UploadClassAction extends AnAction
         return project;
     }
 
-    public void notifyMessage(String message, MessageType type)
+    public void notifyMessage(final String message, final MessageType type)
     {
-        ToolWindowManager.getInstance(getProject()).notifyByBalloon(
-                WINDOW_ID_BOILER,
-                type,
-                message
-        );
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                ToolWindowManager.getInstance(getProject()).notifyByBalloon(
+                        WINDOW_ID_BOILER,
+                        type,
+                        message
+                );
+            }
+        });
     }
 
-    private class UploadClassRunnable extends ProgressIndicatorBase implements Runnable
+    private class UploadClassRunnable implements Runnable
     {
         private String className;
         private String text;
@@ -178,58 +187,6 @@ public class UploadClassAction extends AnAction
             } else {
                 notifyMessage("Boiler url is empty", MessageType.ERROR);
             }
-        }
-
-        @Override
-        public void start() {
-            super.start();
-
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    if (ApplicationManager.getApplication().isDisposed()) return;
-                    final WindowManager windowManager = WindowManager.getInstance();
-                    if (windowManager == null) return;
-
-                    Project[] projects= ProjectManager.getInstance().getOpenProjects();
-                    if (projects.length==0){
-                        projects=new Project[]{null};
-                    }
-
-                    for (Project project : projects) {
-                        final StatusBarEx statusBar = (StatusBarEx) windowManager.getStatusBar(project);
-                        if (statusBar == null) continue;
-
-                        statusBar.startRefreshIndication("Uploading to boiler...");
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void stop() {
-            super.stop();
-
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    if (ApplicationManager.getApplication().isDisposed()) return;
-                    final WindowManager windowManager = WindowManager.getInstance();
-                    if (windowManager == null) return;
-
-                    Project[] projects= ProjectManager.getInstance().getOpenProjects();
-                    if (projects.length==0){
-                        projects=new Project[]{null};
-                    }
-
-                    for (Project project : projects) {
-                        final StatusBarEx statusBar = (StatusBarEx) windowManager.getStatusBar(project);
-                        if (statusBar == null) continue;
-
-                        statusBar.stopRefreshIndication();
-                    }
-                }
-            });
         }
 
     }

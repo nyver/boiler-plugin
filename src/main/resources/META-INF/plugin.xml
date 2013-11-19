@@ -1,6 +1,6 @@
 <idea-plugin version="2">
   <id>com.nyver.idea.plugin.boiler</id>
-  <name>Boiler plugin</name>
+  <name>Boiler Plugin</name>
   <version>1.0</version>
   <vendor email="nyver@mail.ru" url="http://github.com/nyver">Yuri Novitsky</vendor>
 

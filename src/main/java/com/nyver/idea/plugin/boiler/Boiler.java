@@ -13,7 +13,9 @@ import java.io.IOException;
  */
 public class Boiler
 {
-    private String BOILER_ERROR_MESSAGE_STRING = "Error message";
+    private final static String BOILER_ERROR_MESSAGE_STRING = "Error message";
+
+    private final static int TIMEOUT = 1000;
 
     private String response;
 
@@ -27,9 +29,12 @@ public class Boiler
     {
         String result = null;
 
+        PostMethod post = new PostMethod(url);
+
         try {
-            PostMethod post = new PostMethod(url);
+
             HttpClient client = new HttpClient();
+            client.getHttpConnectionManager().getParams().setConnectionTimeout(TIMEOUT);
 
             NameValuePair[] data = new NameValuePair[] {
                     new NameValuePair("className", className),
@@ -85,6 +90,8 @@ public class Boiler
         } catch (IOException e) {
             e.printStackTrace();
             throw new BoilerException(e);
+        } finally {
+            post.releaseConnection();
         }
     }
 
