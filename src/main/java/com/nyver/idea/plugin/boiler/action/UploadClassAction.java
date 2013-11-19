@@ -3,12 +3,16 @@ package com.nyver.idea.plugin.boiler.action;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.util.ProgressIndicatorBase;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.openapi.wm.WindowManager;
+import com.intellij.openapi.wm.ex.StatusBarEx;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
@@ -28,6 +32,7 @@ import javax.swing.*;
 public class UploadClassAction extends AnAction
 {
     public static final String WINDOW_ID_BOILER = "Boiler";
+    public static final String ICON_PATH = "/images/boiler.png";
 
     private Project project;
 
@@ -35,7 +40,7 @@ public class UploadClassAction extends AnAction
 
     public UploadClassAction(BoilerToolWindowFactory toolWindowFactory)
     {
-        super(IconLoader.findIcon("/images/boiler.png"));
+        super(IconLoader.findIcon(ICON_PATH));
         this.toolWindowFactory = toolWindowFactory;
     }
 
@@ -76,7 +81,7 @@ public class UploadClassAction extends AnAction
     {
         project = ActionUtil.getProject(anActionEvent);
 
-        PsiJavaFile file = getCurrentJavaFile(anActionEvent);
+        final PsiJavaFile file = getCurrentJavaFile(anActionEvent);
 
         if (null != file) {
 
@@ -84,16 +89,27 @@ public class UploadClassAction extends AnAction
 
             if (classes.length >= 1) {
 
-                StringBuilder className = new StringBuilder();
-                className.append(file.getPackageName());
-                if (className.length() > 0) {
-                    className.append(".");
+                StringBuilder builder = new StringBuilder();
+                builder.append(file.getPackageName());
+                if (builder.length() > 0) {
+                    builder.append(".");
                 }
 
-                className.append(classes[0].getNameIdentifier().getText());
+                builder.append(classes[0].getNameIdentifier().getText());
 
-                UploadClassRunnable process = new UploadClassRunnable(className.toString(), file.getText());
-                ProgressManager.getInstance().runProcess(process, process);
+                final String className = builder.toString();
+
+                ApplicationManager.getApplication().runReadAction(
+                        new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                UploadClassRunnable process = new UploadClassRunnable(className.toString(), file.getText());
+                                ProgressManager.getInstance().runProcess(process, process);
+                            }
+                        }
+                );
             } else {
                 notifyMessage("Java classes are not found", MessageType.ERROR);
             }
@@ -162,6 +178,58 @@ public class UploadClassAction extends AnAction
             } else {
                 notifyMessage("Boiler url is empty", MessageType.ERROR);
             }
+        }
+
+        @Override
+        public void start() {
+            super.start();
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    if (ApplicationManager.getApplication().isDisposed()) return;
+                    final WindowManager windowManager = WindowManager.getInstance();
+                    if (windowManager == null) return;
+
+                    Project[] projects= ProjectManager.getInstance().getOpenProjects();
+                    if (projects.length==0){
+                        projects=new Project[]{null};
+                    }
+
+                    for (Project project : projects) {
+                        final StatusBarEx statusBar = (StatusBarEx) windowManager.getStatusBar(project);
+                        if (statusBar == null) continue;
+
+                        statusBar.startRefreshIndication("Uploading to boiler...");
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    if (ApplicationManager.getApplication().isDisposed()) return;
+                    final WindowManager windowManager = WindowManager.getInstance();
+                    if (windowManager == null) return;
+
+                    Project[] projects= ProjectManager.getInstance().getOpenProjects();
+                    if (projects.length==0){
+                        projects=new Project[]{null};
+                    }
+
+                    for (Project project : projects) {
+                        final StatusBarEx statusBar = (StatusBarEx) windowManager.getStatusBar(project);
+                        if (statusBar == null) continue;
+
+                        statusBar.stopRefreshIndication();
+                    }
+                }
+            });
         }
 
     }
