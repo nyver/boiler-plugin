@@ -1,9 +1,11 @@
 package com.nyver.idea.plugin.boiler.action;
 
+import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -67,6 +69,12 @@ public class UploadClassAction extends AnAction
         super(text, description, icon);
     }
 
+    @Override
+    public void update(AnActionEvent e)
+    {
+        e.getPresentation().setEnabled(null != getCurrentJavaFile(e));
+    }
+
     /**
      * Get current java file
      *
@@ -75,7 +83,7 @@ public class UploadClassAction extends AnAction
      */
     private PsiJavaFile getCurrentJavaFile(AnActionEvent event)
     {
-        PsiFile file = DataKeys.PSI_FILE.getData(event.getDataContext());
+        PsiFile file = DataKeys.PSI_FILE.getData(DataManager.getInstance().getDataContext());
         return file instanceof PsiJavaFile ? (PsiJavaFile) file : null;
     }
 
@@ -111,6 +119,7 @@ public class UploadClassAction extends AnAction
                         Runnable process = new UploadClassRunnable(className, file.getText());
                         process.run();
                     }
+
                 };
 
                 ProgressManager.getInstance().run(task);
@@ -141,6 +150,11 @@ public class UploadClassAction extends AnAction
         });
     }
 
+    private BoilerToolWindowFactory getToolWindowFactory()
+    {
+        return toolWindowFactory;
+    }
+
     private class UploadClassRunnable implements Runnable
     {
         private String className;
@@ -155,16 +169,16 @@ public class UploadClassAction extends AnAction
         @Override
         public void run()
         {
-            String url = toolWindowFactory.getBoilerUrl();
+            String url = getToolWindowFactory().getBoilerUrl();
 
             if (!url.isEmpty()) {
 
-                toolWindowFactory.getTextArea().setText("");
+                getToolWindowFactory().getTextArea().setText("");
 
-                toolWindowFactory.getSettings().saveUrl(url);
-                toolWindowFactory.setupSettings();
+                getToolWindowFactory().getSettings().saveUrl(url);
+                getToolWindowFactory().setupSettings();
 
-                toolWindowFactory.getTextArea().append(String.format("Class \"%s\" is uploading to \"%s\"...\n", className, url));
+                getToolWindowFactory().getTextArea().append(String.format("Class \"%s\" is uploading to \"%s\"...\n", className, url));
 
                 Boiler boiler = new Boiler();
 
@@ -173,14 +187,14 @@ public class UploadClassAction extends AnAction
                     boiler.upload(url, className, text);
 
                     String message = String.format("Class \"%s\" has been uploaded successfully\n", className);
-                    toolWindowFactory.getTextArea().append(message);
+                    getToolWindowFactory().getTextArea().append(message);
                     notifyMessage(message, MessageType.INFO);
                 } catch (BoilerException e) {
                     notifyMessage(e.getMessage(), MessageType.ERROR);
-                    toolWindowFactory.getTextArea().append(e.getMessage() + "\n");
+                    getToolWindowFactory().getTextArea().append(e.getMessage() + "\n");
                     String response = boiler.getResponse();
                     if (!response.isEmpty()) {
-                        toolWindowFactory.getTextArea().append(response);
+                        getToolWindowFactory().getTextArea().append(response);
                     }
                 }
 
@@ -190,4 +204,5 @@ public class UploadClassAction extends AnAction
         }
 
     }
+
 }

@@ -53,6 +53,7 @@
                 <constraints/>
                 <properties>
                   <editable value="false"/>
+                  <focusable value="true"/>
                 </properties>
               </component>
             </children>
